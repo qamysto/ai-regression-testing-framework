@@ -1,0 +1,17 @@
+node_modules/
+dist/
+apps/*/dist/
+packages/*/dist/
+.env
+.env.local
+*.log
+api.dev.log
+api.dev.err.log
+web.dev.log
+web.dev.err.log
+.DS_Store
+coverage/
+playwright-report/
+test-results/
+artifacts/
+.vscode/

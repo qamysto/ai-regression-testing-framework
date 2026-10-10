@@ -1,0 +1,23 @@
+{
+  "name": "ai-regression-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI-powered automated regression testing framework monorepo.",
+  "scripts": {
+    "dev:api": "npm run dev -w @regression/api",
+    "dev:web": "npm run dev -w @regression/web",
+    "build": "npm run build:packages && npm run build:apps",
+    "build:packages": "npm run build -w @regression/shared && npm run build -w @regression/ai && npm run build -w @regression/runner",
+    "build:apps": "npm run build -w @regression/api && npm run build -w @regression/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,css}\""
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3"
+  }
+}
