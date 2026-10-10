@@ -41,7 +41,7 @@ import type {
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api";
 
-type Screen = "dashboard" | "requirements" | "review" | "runs" | "comments" | "admin";
+type Screen = "dashboard" | "requirements" | "review" | "runs" | "coverage" | "reports" | "comments" | "admin";
 type RunListItem = TestRun & { summary: RunSummary };
 type RunDetail = {
   run?: TestRun;
@@ -65,6 +65,8 @@ const nav = [
   { id: "requirements", label: "Requirements", icon: FileText },
   { id: "review", label: "Review", icon: Sparkles },
   { id: "runs", label: "Runs", icon: Play },
+  { id: "coverage", label: "Coverage", icon: CheckCircle2 },
+  { id: "reports", label: "Reports", icon: Download },
   { id: "comments", label: "Comments", icon: MessageSquare },
   { id: "admin", label: "Admin", icon: Users }
 ] satisfies Array<{ id: Screen; label: string; icon: typeof LayoutDashboard }>;
@@ -447,6 +449,21 @@ export function ReadyApp() {
             runs={runs}
             selectedRunId={selectedRunId}
             testCases={testCases}
+          />
+        ) : null}
+
+        {screen === "coverage" ? (
+          <CoverageScreen coveredRequirementIds={coveredRequirementIds} requirements={requirements} testCases={testCases} />
+        ) : null}
+
+        {screen === "reports" ? (
+          <ReportsScreen
+            analyses={runDetail?.analyses ?? []}
+            clusters={runDetail?.clusters ?? []}
+            coverageRate={coverageRate}
+            latestRun={selectedRun}
+            onDownload={() => void downloadExcel()}
+            summary={latestSummary}
           />
         ) : null}
 
@@ -872,6 +889,115 @@ function RunsScreen({
             </div>
           </div>
         </section>
+      </article>
+    </section>
+  );
+}
+
+function CoverageScreen({
+  coveredRequirementIds,
+  requirements,
+  testCases
+}: {
+  coveredRequirementIds: Set<string>;
+  requirements: Requirement[];
+  testCases: TestCase[];
+}) {
+  const approvedByRequirement = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const testCase of testCases) {
+      if (testCase.reviewStatus === "approved") {
+        counts.set(testCase.requirementId, (counts.get(testCase.requirementId) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [testCases]);
+
+  return (
+    <article className="panel">
+      <PanelHeader title="Coverage matrix" subtitle="Requirements without approved tests are release risks." icon={<CheckCircle2 size={20} />} />
+      <div className="data-table">
+        <div className="table-head four">
+          <span>Requirement</span>
+          <span>Status</span>
+          <span>Approved tests</span>
+          <span>Risk</span>
+        </div>
+        {requirements.map((requirement) => {
+          const approvedCount = approvedByRequirement.get(requirement.id) ?? 0;
+          const covered = coveredRequirementIds.has(requirement.id);
+          return (
+            <div className="table-row four" key={requirement.id}>
+              <strong>{requirement.title}</strong>
+              <span className={`status ${covered ? "approved" : "rejected"}`}>{covered ? "covered" : "uncovered"}</span>
+              <span>{approvedCount}</span>
+              <span>{covered ? "Ready for regression" : "Needs QA review"}</span>
+            </div>
+          );
+        })}
+      </div>
+    </article>
+  );
+}
+
+function ReportsScreen({
+  analyses,
+  clusters,
+  coverageRate,
+  latestRun,
+  onDownload,
+  summary
+}: {
+  analyses: AiAnalysis[];
+  clusters: FailureCluster[];
+  coverageRate: number;
+  latestRun?: TestRun;
+  onDownload: () => void;
+  summary: RunSummary;
+}) {
+  const recommendation = summary.failed === 0 && coverageRate >= 90 ? "Go suggestion" : "Review required";
+
+  return (
+    <section className="dashboard-grid">
+      <article className="panel">
+        <PanelHeader title="Release report" subtitle={latestRun ? `${latestRun.buildId ?? "Build"} on ${latestRun.environment}` : "No run selected"} />
+        <div className="run-list">
+          <RunText label="Recommendation" value={recommendation} />
+          <RunText label="Pass rate" value={`${summary.passRate}%`} />
+          <RunText label="Coverage" value={`${coverageRate}%`} />
+          <RunText label="Open clusters" value={clusters.length.toString()} />
+        </div>
+        <button className="primary-action" onClick={onDownload}>
+          <Download size={18} />
+          Download Excel
+        </button>
+      </article>
+
+      <article className="panel">
+        <PanelHeader title="Top risks" subtitle="AI summarizes the main reasons to pause release." icon={<AlertTriangle size={20} />} />
+        <div className="stack">
+          {clusters.length ? (
+            clusters.map((cluster) => (
+              <div className="cluster" key={cluster.id}>
+                <strong>{cluster.summary}</strong>
+                <span>{cluster.size} affected tests</span>
+              </div>
+            ))
+          ) : (
+            <EmptyState text="No failure clusters for this run." />
+          )}
+        </div>
+      </article>
+
+      <article className="panel wide">
+        <PanelHeader title="AI release summary" subtitle="This is advisory only; final decision stays human-controlled." icon={<FlaskConical size={20} />} />
+        <div className="stack">
+          {analyses.length ? (
+            analyses.map((analysis) => <AnalysisCard analysis={analysis} key={analysis.id} />)
+          ) : (
+            <EmptyState text="No failure analysis available." />
+          )}
+        </div>
       </article>
     </section>
   );
