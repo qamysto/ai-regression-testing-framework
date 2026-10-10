@@ -53,6 +53,35 @@ The API seed data includes:
 - `admin@example.com` as Admin
 
 For this first scaffold, the API accepts any password for those seed emails. Replace this with persistent password hashing before production use.
+
+## Build Order
+
+The project will be completed in this order:
+
+1. UI screens and workflows
+2. Frontend API integration
+3. Backend APIs and role guards
+4. PostgreSQL persistence with Prisma
+5. Playwright runner and artifacts
+6. AI provider integration
+7. Excel reports and release summary
+
+## APIs Needed
+
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `GET /api/projects`
+- `GET /api/requirements`
+- `POST /api/requirements`
+- `POST /api/requirements/:id/generate-tests`
+- `GET /api/test-cases`
+- `PATCH /api/test-cases/:id/review`
+- `GET /api/runs`
+- `POST /api/runs`
+- `GET /api/runs/:id`
+- `GET /api/comments/:targetType/:targetId`
+- `POST /api/comments`
+- `GET /api/reports/runs/:id/export.xlsx`
 =======
 # ai-regression-testing-framework
 >>>>>>> a2850faca54b967accf898ad0d4cbf060698f1f3
