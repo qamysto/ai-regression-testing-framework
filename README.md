@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AI-Powered Automated Regression Testing Framework
 
 This repository is the starter implementation for the QA-first regression platform described in the plan.
@@ -52,3 +53,6 @@ The API seed data includes:
 - `admin@example.com` as Admin
 
 For this first scaffold, the API accepts any password for those seed emails. Replace this with persistent password hashing before production use.
+=======
+# ai-regression-testing-framework
+>>>>>>> a2850faca54b967accf898ad0d4cbf060698f1f3
